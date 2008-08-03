@@ -1,3 +1,5 @@
+\ These were in tuslrc.ts once, but weren't often used.
+
 :over {x y}		x y x ;
 :rot {x y z}		y z x ;
 
