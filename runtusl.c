@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../tusl/tusl.h"
+#include "tusl.h"
 
 static void
 panic (void)
@@ -27,7 +27,7 @@ main (int argc, char **argv)
   ts_install_standard_words (vm);
   ts_install_unsafe_words (vm);
 
-  ts_load (vm, "tusl/tuslrc.ts");
+  ts_load (vm, "tuslrc.ts");
 
   if (1 == argc)
     ts_load_interactive (vm, stdin);

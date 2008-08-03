@@ -13,9 +13,8 @@ programs (like Vapour and Miasma), and this is my reply.
 
 QUICK START
 
-$ cd <the-parent-directory-of-this-file>
 $ make
-$ tusl/runtusl '"tusl/babble.ts" load'
+$ ./runtusl '"babble.ts" load'
 
 In this paper we will demonstrate that with structured 
 deployment of transient policy criteria balanced by synchronized 
