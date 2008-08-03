@@ -1,0 +1,52 @@
+make it more robust for when you're calling a word that wasn't fully
+defined because it tried to use an undefined word. E.g.:
+
+:move {a}  a  a 1+ c@  a 2+ c@  {a s0 s1}
+           s0 open? (if)  a leave  a 1+ join ;  (then)
+           "unimpl" throw ;
+%Undefined word:
+%:leave ;
+
+:try {a}  a move  a type cr ;Segmentation fault
+("i " try 
+
+Consider decentralizing the inner interpreter:
+ 1. A word that performs an EXIT action, like ";" and ";does", should
+    do a longjmp or set a flag (maybe set vm->pc to a special value).
+    (More obviously it could return a flag, but then all our C words
+    have to return a value -- ugh.)  (EXIT is run so often that it 
+    might still pay to check for it inside the inner interpreter
+    to skip calling it as an action.)
+ 2. The vm structure needs a pointer to the current locals frame
+    (or else pass it in as an extra parameter).  (Drawback: we need
+    a separate C action for each locals-related word, unless we can
+    somehow get at the word# of the current word from inside the
+    action.)
+ 3. Do tail-call optimization at compile time.
+
+ability to get the name of the last word, e.g. to stick it in a
+disassembler table when defining an assembler word.
+
+locals working in interpret mode
+
+if/then/else
+
+if/then working in interpret mode?
+
+ability to set the last N word's behaviors, not just the 
+last one's (as in 'variable' and 'constant', etc.)
+
+how about instead if you could just copy a given dictionary entry's
+behavior to another?  problem is, copying just the code pointer of a
+closure is unsafe, while copying the whole closure isn't very useful.
+I guess we could have a flag on the entry indicating whether copying
+the code pointer is allowed.  (The same test should guard setting the
+data word of the closure.)
+
+mutual recursion through forward references
+(of course, you could use 'execute' but can we do better?)
+Here's a trick: 
+ :A blah blah ... \ fall through
+ :B woo woo A ;
+
+need a word to get the code-body address of a word
