@@ -4,7 +4,7 @@
    http://www.opensource.org/licenses/mit-license.html
 
 This is an experiment in adding interactive scripting to C programs
-with as little fuss as possible.  The language is loosely derived from
+with as little fuss as possible. The language is loosely derived from
 Forth, but without trying to match any language standard.
 
 About the name: Luke Gorrie once complained about my modest names for
@@ -13,12 +13,19 @@ programs (like Vapour and Miasma), and this is my reply.
 
 QUICK START
 
-$ make
-$ ./runtusl '"babble.ts" load'
+  $ make
+  $ ./runtusl '"babble.ts" load'
 
-In this paper we will demonstrate that with structured 
-deployment of transient policy criteria balanced by synchronized 
-monitored utilities it is necessary for all optimal undocumented 
-interaction to avoid optional monitored congruence.
-[etc...]
+outputs:
 
+  In this paper we will demonstrate that with structured 
+  deployment of transient policy criteria balanced by synchronized 
+  monitored utilities it is necessary for all optimal undocumented 
+  interaction to avoid optional monitored congruence.
+  [etc...]
+
+Or run with no arguments to get an interactive prompt:
+
+  $ ./runtusl
+  ( 2 3 + .
+  5 ( 
