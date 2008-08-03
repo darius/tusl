@@ -1,33 +1,33 @@
 \ Leo Brodie's fog generator, translated from _Starting Forth_.
 
-:pick z-        random z umod ;
 
-:table          given ;will yz- y 4* z + @ ;
+\ Output with word-wrap
 
-:repeat xyz-    y z < (when)  y x execute       \ Call x on each of y..!z.
-                x y 1+ z repeat ;
-:plural         given ,                         \ Will call the arg on 0..!z.
-                ;will yz-  z @ 0 y repeat ;
-
-:typing yz-     z (when)  y c@ emit  y 1+ z 1- typing ;
+:typing {a u}   u (when)  a c@ emit  a 1+ u 1- typing ;
 
 :column (0 variable)
-:over?          61 column @ < ;
+:passed?        61 column @ < ;  \ Is the column past the right margin?
 :newline        cr  0 column ! ;
-:space          1 column +!  over? (if) newline ; (then)  32 emit ;
-:?newline       over? (if) newline (then) ;
-:.word yz-      z column +!  ?newline  y z typing ;
+:space          1 column +!  passed? (if) newline ; (then)  32 emit ;
+:?newline       passed? (if) newline (then) ;
+:.word {a u}    u column +!  ?newline  a u typing ;
 
-:wording yz-    z y + c@   0= (if) z y ; (then)
-                z y + c@ 32 = (if) z y ; (then)
-                y 1+ z wording ;
-:word z-        0 z wording ;
+:delim? {c}     c 0=  c bl = or ;
+:wording {a u}  a u + c@ delim? (if) a u ; (then)  a u 1+ wording ;
+:word {a}       a 0 wording ;
 
-:?space z-      z c@ 32 = (if) space  z 1+ ; (then) z ;
-:spew           word yz-  z (when)      
-                y z .word
-                y z + ?space spew ;
-\ That line-breaking is still fucked up somehow...
+:?space {a}     a c@ 32 = (if) space  a 1+ ; (then) a ;
+:spew           word {a u}  u (when)
+                  a u .word
+                  a u + ?space spew ;
+
+
+\ The random text snippets that we'll stitch together
+
+:pick {u}        random u umod ;  \ Pick a random number less than u.
+
+\ A table, given an index u, returns the u'th following entry.
+:table          given  ;will {u a}  u cells a + @ ;
 
 :intros (table 
    "In this paper we will demonstrate that" ,
@@ -73,10 +73,13 @@
                 16 pick 2nd-adjective spew  space
                 16 pick noun          spew ;
 
-:phrase         space filler space noun-phrase ;
-:phrases        ('phrase plural)
-:paragraph      intro 4 phrases  $. emit newline newline ;
 
-:paragraphs     ('paragraph plural)
-:paper          newline 4 paragraphs ;          \ Babble a paper!
+\ Stitching the snippets into a 4-paragraph paper
+
+:s              for ;
+
+:phrase         space filler space noun-phrase ;
+:paragraph      intro  4 'phrase s  $. emit newline newline ;
+:paper          newline  4 'paragraph s ;
+
 (paper)
