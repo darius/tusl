@@ -74,9 +74,9 @@
                 16 pick noun          spew ;
 
 :phrase         space filler space noun-phrase ;
-:phrases        'phrase (plural)
+:phrases        ('phrase plural)
 :paragraph      intro 4 phrases  $. emit newline newline ;
 
-:paragraphs     'paragraph (plural)
+:paragraphs     ('paragraph plural)
 :paper          newline 4 paragraphs ;          \ Babble a paper!
 (paper)
