@@ -14,7 +14,7 @@ programs (like Vapour and Miasma), and this is my reply.
 QUICK START
 
   $ make
-  $ ./runtusl '"babble.ts" load'
+  $ ./runtusl '"eg/babble.ts" load'
 
 outputs:
 
