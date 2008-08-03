@@ -1,7 +1,7 @@
-/* TUSL -- the ultimate scripting language.
-   Copyright 2003-2005 Darius Bacon <darius@accesscom.com>
+   TUSL -- the ultimate scripting language.
+   Copyright 2003-2005 Darius Bacon <darius@wry.me>
    under the terms of the MIT X license found at
-   http://www.opensource.org/licenses/mit-license.html */
+   http://www.opensource.org/licenses/mit-license.html
 
 This is an experiment in adding interactive scripting to C programs
 with as little fuss as possible.  The language is loosely derived from
