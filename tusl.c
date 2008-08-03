@@ -56,14 +56,14 @@ print_place (char **dest, int *dest_size, const ts_Place *place)
   if (NULL != place->opt_filename && '\0' != place->opt_filename[0])
     {
       int n = min (*dest_size,
-		   snprintf (*dest, *dest_size, 
-			     "%s:", place->opt_filename));
+                   snprintf (*dest, *dest_size, 
+                             "%s:", place->opt_filename));
       *dest += n, *dest_size -= n;
     }
     {
       int n = min (*dest_size,
-		   snprintf (*dest, *dest_size, 
-			     "%d.%d: ", place->line, place->column));
+                   snprintf (*dest, *dest_size, 
+                             "%d.%d: ", place->line, place->column));
       *dest += n, *dest_size -= n;
     }
 }
@@ -230,7 +230,7 @@ ts_pop (ts_VM *vm)
 /* Initialize a stream with the given closure. */
 void
 ts_set_stream (ts_Stream *stream, ts_Streamer *streamer, void *data,
-	       const char *opt_filename)
+               const char *opt_filename)
 {
   stream->ptr = stream->limit = stream->buffer;
   stream->streamer = streamer;
@@ -264,8 +264,8 @@ refill (ts_VM *vm, int delta)
     int result = input->ptr[0];
     if (delta)
       {
-	advance (&input->place, result);
-	++(input->ptr);
+        advance (&input->place, result);
+        ++(input->ptr);
       }
     return result;
   }
@@ -395,10 +395,10 @@ ts_put_string (ts_VM *vm, const char *string, int size)
   for (i = 0; i < size; ++i)
     {
       if (output->ptr == output->limit)
-	ts_flush_output (vm);
+        ts_flush_output (vm);
       output->ptr++[0] = string[i];
       if ('\n' == string[i])
-	newline = yes;
+        newline = yes;
     }
   if (newline)
     ts_flush_output (vm);
@@ -414,10 +414,10 @@ ts_put_string (ts_VM *vm, const char *string, int size)
   for (i = 0; i < size; ++i)
     {
       if (output->ptr == output->limit)
-	ts_flush_output (vm);
+        ts_flush_output (vm);
       output->ptr++[0] = string[i];
       if ('\n' == string[i])
-	ts_flush_output (vm);
+        ts_flush_output (vm);
     }
 }
 
@@ -440,9 +440,9 @@ put_decimal (ts_VM *vm, int n)
 /* The dictionary */
 
 enum { 
-  EXIT = 0,			/* Dictionary index of the ";" word */
-  LITERAL,	      /* Dictionary index of the "<<literal>>" word */
-  BRANCH,	       /* Dictionary index of the "<<branch>>" word */
+  EXIT = 0,                     /* Dictionary index of the ";" word */
+  LITERAL,            /* Dictionary index of the "<<literal>>" word */
+  BRANCH,              /* Dictionary index of the "<<branch>>" word */
   LOCAL0,
   LOCAL1,
   LOCAL2,
@@ -469,14 +469,14 @@ ts_lookup (ts_VM *vm, const char *name)
     {
       int j = ts_dictionary_size - i - 1;
       if (NULL != vm->words[j].name && 
-	  0 == strcmp (name, vm->words[j].name))
-	return LOCAL0 + vm->local_words - i - 1; 
+          0 == strcmp (name, vm->words[j].name))
+        return LOCAL0 + vm->local_words - i - 1; 
                         /* TODO: understand this reversal */
     }
   /* Otherwise check the main dictionary */
   for (i = vm->where - 1; 0 <= i; --i)
     if (NULL != vm->words[i].name && 
-	0 == strcmp (name, vm->words[i].name))
+        0 == strcmp (name, vm->words[i].name))
       return i;
   return ts_not_found;
 }
@@ -491,7 +491,7 @@ ts_install (ts_VM *vm, char *name, ts_Action *action, int datum)
   if (0)
     if (ts_not_found != ts_lookup (vm, name))
       /* FIXME: this is pretty crude -- sometimes we won't want to be
-	 bothered by these warnings */
+         bothered by these warnings */
       fprintf (stderr, "Warning: redefinition of %s\n", name);
   {
     ts_Word *w = vm->words + vm->where++;
@@ -641,63 +641,63 @@ do_sequence (ts_VM *vm, ts_Word *pw)
     int *old_pc = vm->pc;
     vm->pc = data_cell (vm, pw->datum);
 
-    {			 /* TODO: eliminate overhead of setjmp here */
+    {                    /* TODO: eliminate overhead of setjmp here */
       ts_TRY (vm, frame)
-	{
-	  for (;;)
-	    {		    /* This code also appears in ts_run(). */
-	      unsigned word = *(vm->pc)++;
+        {
+          for (;;)
+            {               /* This code also appears in ts_run(). */
+              unsigned word = *(vm->pc)++;
 
-	      if (NULL != vm->tracer && vm->tracer (vm, word))
-		break;
+              if (NULL != vm->tracer && vm->tracer (vm, word))
+                break;
 
-	      if (EXIT == word)
-		break;
-	      else if ((unsigned)(word - LOCAL0) < (unsigned)max_locals)
-		ts_push (vm, locals[word - LOCAL0]);
-	      else if ((unsigned)(word - GRAB1) < (unsigned)max_locals)
-		{				/* Grab locals */
-		  int i, count = 1 + (word - GRAB1);
-		  for (i = 0; i < count; ++i)
-		    locals[i] = ts_pop (vm); /* TODO: speed up */
-		}
-	      else if (WILL == word)
-		{
-		  /*
-		    Post:
-		    word: action = ts_do_will, datum = p
-		    p: script_location
-		  */
-		  ts_Word *w = vm->words + vm->where - 1;
-		  w->action = ts_do_will;
-		  *data_cell (vm, w->datum) = (char*)vm->pc - vm->data;
-		  break;
-		}
-	      else if (word < (unsigned)(vm->where))
-		{
-		  ts_Action *action = vm->words[word].action;
-		  if (do_sequence == action && EXIT == vm->pc[0])
-		    {		/* tail call */
-		      if (NULL != vm->colon_tracer && 
-			  vm->colon_tracer (vm, pw))
-			return;
-		      vm->pc = data_cell (vm, vm->words[word].datum);
-		    }
-		  else
-		    action (vm, &(vm->words[word]));
-		}
-	      else
-		ts_error (vm, "Invoked an undefined word, #%d", word);
-	    }
+              if (EXIT == word)
+                break;
+              else if ((unsigned)(word - LOCAL0) < (unsigned)max_locals)
+                ts_push (vm, locals[word - LOCAL0]);
+              else if ((unsigned)(word - GRAB1) < (unsigned)max_locals)
+                {                               /* Grab locals */
+                  int i, count = 1 + (word - GRAB1);
+                  for (i = 0; i < count; ++i)
+                    locals[i] = ts_pop (vm); /* TODO: speed up */
+                }
+              else if (WILL == word)
+                {
+                  /*
+                    Post:
+                    word: action = ts_do_will, datum = p
+                    p: script_location
+                  */
+                  ts_Word *w = vm->words + vm->where - 1;
+                  w->action = ts_do_will;
+                  *data_cell (vm, w->datum) = (char*)vm->pc - vm->data;
+                  break;
+                }
+              else if (word < (unsigned)(vm->where))
+                {
+                  ts_Action *action = vm->words[word].action;
+                  if (do_sequence == action && EXIT == vm->pc[0])
+                    {           /* tail call */
+                      if (NULL != vm->colon_tracer && 
+                          vm->colon_tracer (vm, pw))
+                        return;
+                      vm->pc = data_cell (vm, vm->words[word].datum);
+                    }
+                  else
+                    action (vm, &(vm->words[word]));
+                }
+              else
+                ts_error (vm, "Invoked an undefined word, #%d", word);
+            }
 
-	  vm->pc = old_pc;
-	  ts_POP_TRY (vm, frame);
-	}
+          vm->pc = old_pc;
+          ts_POP_TRY (vm, frame);
+        }
       ts_EXCEPT (vm, frame)
-	{
-	  vm->pc = old_pc;
-	  ts_escape (vm, frame.complaint);
-	}
+        {
+          vm->pc = old_pc;
+          ts_escape (vm, frame.complaint);
+        }
     }
   }
 }
@@ -713,13 +713,13 @@ ts_catch (ts_VM *vm, ts_Word *pw)
     int sp = vm->sp;
     ts_TRY (vm, frame)
       {
-	ts_run (vm, word);
-	ts_push (vm, 0);
+        ts_run (vm, word);
+        ts_push (vm, 0);
       }
     ts_EXCEPT (vm, frame)
       {
-	vm->sp = sp;
-	ts_push (vm, frame.complaint - vm->data);
+        vm->sp = sp;
+        ts_push (vm, frame.complaint - vm->data);
       }
   }
 }
@@ -793,8 +793,8 @@ define0 (ts_here,         ts_OUTPUT_1 (vm->here); )
 define0 (ts_there,        ts_OUTPUT_1 (vm->there); )
 define0 (ts_where,        ts_OUTPUT_1 (vm->where); )
 define1 (ts_string_comma, ts_OUTPUT_1 (compile_string (vm, 
-						       ts_data_byte (vm, 
-								     z))); )
+                                                       ts_data_byte (vm, 
+                                                                     z))); )
 
 static INLINE void
 nonzero (ts_VM *vm, int z)
@@ -921,7 +921,7 @@ ts_print_stack (ts_VM *vm, ts_Word *pw)
   for (i = 0; i <= stack_pointer (vm); ++i)
     {
       if (0 < i)
-	ts_put_char (vm, ' ');
+        ts_put_char (vm, ' ');
       put_decimal (vm, vm->stack[i]);
     }
   ts_put_char (vm, '\n');
@@ -963,7 +963,7 @@ parse_number (int *result, const char *text)
       errno = 0;
       value = strtoul (text, &endptr, 0);
       if ('\0' != *endptr || ERANGE == errno)
-	return no;
+        return no;
     }
 
   *result = value;
@@ -1207,10 +1207,10 @@ get_token (ts_VM *vm, char *buf, int size)
       buf[i++] = c;
       c = get_char (vm);
       if (EOF == c)
-	{
-	  buf[i] = '\0';
-	  ts_error (vm, "Unterminated character constant: %s", buf);
-	}
+        {
+          buf[i] = '\0';
+          ts_error (vm, "Unterminated character constant: %s", buf);
+        }
       buf[i++] = c;
     }
   else if (NULL != strchr ("\n" punctuation, c))
@@ -1218,28 +1218,28 @@ get_token (ts_VM *vm, char *buf, int size)
   else if ('"' == c || '`' == c) /* Scan a string literal */
     {
       /* We allow both " and ` as string delimiters because idiotic
-	 libsdl parses command-line arguments wrong (at least in
-	 Windows), messing up double-quoted strings.  Backquoted
-	 strings are a hack around that. */
+         libsdl parses command-line arguments wrong (at least in
+         Windows), messing up double-quoted strings.  Backquoted
+         strings are a hack around that. */
       int delim = c;
       do {
-	append (vm, buf, size, i++, c);
-	c = get_char (vm);
-	if (EOF == c)
-	  {
-	    buf[i] = '\0';
-	    ts_error (vm, "Unterminated string constant: %s", buf);
-	  }
-      } while (delim != c);	/* TODO: fancier string syntax */
+        append (vm, buf, size, i++, c);
+        c = get_char (vm);
+        if (EOF == c)
+          {
+            buf[i] = '\0';
+            ts_error (vm, "Unterminated string constant: %s", buf);
+          }
+      } while (delim != c);     /* TODO: fancier string syntax */
     }
   else
-    {		/* Other tokens extend to whitespace, quote, or punctuation */
+    {           /* Other tokens extend to whitespace, quote, or punctuation */
       do {
-	append (vm, buf, size, i++, c);
-	c = peek_char (vm);
-	if (NULL != strchr (" \t\r\n\"`" punctuation, c))
-	  break;
-	get_char (vm);
+        append (vm, buf, size, i++, c);
+        c = peek_char (vm);
+        if (NULL != strchr (" \t\r\n\"`" punctuation, c))
+          break;
+        get_char (vm);
       } while (EOF != c);
     }
   buf[i] = '\0';
@@ -1266,73 +1266,73 @@ dispatch (ts_VM *vm, const char *token)
    */
   switch (token[0])
     {
-    case '\\': 			/* a comment */
+    case '\\':                  /* a comment */
       skip_line (vm); 
       break;
 
     case ':': case '(': case ')': /* mode-changing characters */
       /* XXX how about making ':' not mode-changing, but simply acting
-	 immediately on the token it's part of?  No spaces allowed then
-	 before the word to be defined, but I've never had them anyway. */
+         immediately on the token it's part of?  No spaces allowed then
+         before the word to be defined, but I've never had them anyway. */
       vm->mode = token[0]; 
       break;
 
-    case '{':			/* start defining locals */
+    case '{':                   /* start defining locals */
       reset_locals (vm, NULL);
       vm->mode = '{';
       break;
 
-    case '}':			/* finish defining locals */
+    case '}':                   /* finish defining locals */
       compile_grab (vm, NULL);
       vm->mode = ')';
       break;
 
-    case '$':			/* a character literal */
+    case '$':                   /* a character literal */
       ('(' == vm->mode ? ts_push : compile_push) (vm, token[1]);
       break;
 
-    case '"':			/* a string literal */
+    case '"':                   /* a string literal */
     case '`':
       {
-	int string_index = compile_string (vm, token + 1);
-	('(' == vm->mode ? ts_push : compile_push) (vm, string_index);
-	break;
+        int string_index = compile_string (vm, token + 1);
+        ('(' == vm->mode ? ts_push : compile_push) (vm, string_index);
+        break;
       }
 
-    case '\'': 			/* a tick literal */
+    case '\'':                  /* a tick literal */
       {
-	int word = ts_lookup (vm, token + 1);
-	if (ts_not_found == word)
-	  ts_error (vm, "Undefined word:\n:%s ;", token + 1);
-	else
-	  ('(' == vm->mode ? ts_push : compile_push) (vm, word);
-	break;
+        int word = ts_lookup (vm, token + 1);
+        if (ts_not_found == word)
+          ts_error (vm, "Undefined word:\n:%s ;", token + 1);
+        else
+          ('(' == vm->mode ? ts_push : compile_push) (vm, word);
+        break;
       }
 
     default:
-      if (':' == vm->mode)	/* define word */
-	{
-	  align_here (vm);
-	  ts_install (vm, save_string (vm, token), do_sequence, vm->here);
-	  reset_locals (vm, NULL);
-	  vm->mode = ')'; 
-	}
-      else if ('{' == vm->mode)	/* define local */
-	install_local (vm, token);
+      if (':' == vm->mode)      /* define word */
+        {
+          align_here (vm);
+          ts_install (vm, save_string (vm, token), do_sequence, vm->here);
+          reset_locals (vm, NULL);
+          vm->mode = ')'; 
+        }
+      else if ('{' == vm->mode) /* define local */
+        install_local (vm, token);
       else
-	{			/* handle it if it's a defined word */
-	  int word = ts_lookup (vm, token);
-	  if (ts_not_found != word)
-	    ('(' == vm->mode ? ts_run : compile) (vm, word);
-	  else
-	    {	      /* handle it if it's a literal number */
-	      int value;
-	      if (parse_number (&value, token))
-		('(' == vm->mode ? ts_push : compile_push) (vm, value);
-	      else
-		ts_error (vm, "Undefined word:\n:%s ;", token);
-	    }
-	}
+        {                       /* handle it if it's a defined word */
+          int word = ts_lookup (vm, token);
+          if (ts_not_found != word)
+            ('(' == vm->mode ? ts_run : compile) (vm, word);
+          else
+            {         /* handle it if it's a literal number */
+              int value;
+              if (parse_number (&value, token))
+                ('(' == vm->mode ? ts_push : compile_push) (vm, value);
+              else
+                ts_error (vm, "Undefined word:\n:%s ;", token);
+            }
+        }
     }
 }
 
@@ -1368,27 +1368,27 @@ ts_interactive_loop (ts_VM *vm)
   for (;;)
     {
       ts_TRY (vm, frame)
-	{
-	  if (!get_token (vm, token, sizeof token))
-	    {
-	      ts_POP_TRY (vm, frame);
-	      break;
-	    }
-	  else if ('\n' == token[0])
-	    prompt (vm);
-	  else
-	    dispatch (vm, token);
-	  ts_POP_TRY (vm, frame);
-	}
+        {
+          if (!get_token (vm, token, sizeof token))
+            {
+              ts_POP_TRY (vm, frame);
+              break;
+            }
+          else if ('\n' == token[0])
+            prompt (vm);
+          else
+            dispatch (vm, token);
+          ts_POP_TRY (vm, frame);
+        }
       ts_EXCEPT (vm, frame)
-	{
-	  /* TODO: we should have a separate 'stderr' type of stream 
-	     to send complaints to. */
-	  ts_put_string (vm, frame.complaint, strlen (frame.complaint));
-	  ts_put_char (vm, '\n');
-	  discard_input (vm);
-	  prompt (vm);
-	}
+        {
+          /* TODO: we should have a separate 'stderr' type of stream 
+             to send complaints to. */
+          ts_put_string (vm, frame.complaint, strlen (frame.complaint));
+          ts_put_char (vm, '\n');
+          discard_input (vm);
+          prompt (vm);
+        }
     }
 
   ts_put_char (vm, '\n');
@@ -1410,7 +1410,7 @@ ts_loading_loop (ts_VM *vm)
 /* XXX */
 static void
 with_io_on_file (ts_VM *vm, 
-		 const char *filename, const char *mode, int word)
+                 const char *filename, const char *mode, int word)
 {
   ts_Stream input = vm->input;
   ts_Stream output = vm->output;
@@ -1420,26 +1420,26 @@ with_io_on_file (ts_VM *vm,
   else
     {
       if ('r' == mode[0])
-	ts_set_input_file_stream (vm, fp, filename);
+        ts_set_input_file_stream (vm, fp, filename);
       else
-	ts_set_output_file_stream (vm, fp, filename);
+        ts_set_output_file_stream (vm, fp, filename);
       {
-	ts_TRY (vm, frame)
-	  {
-	    ts_run (vm, word);
-	    
-	    fclose (fp);
-	    vm->output = output;
-	    vm->input = input;
-	    ts_POP_TRY (vm, frame);
-	  }
-	ts_EXCEPT (vm, frame)
-	  {
-	    fclose (fp);
-	    vm->output = output;
-	    vm->input = input;
-	    ts_escape (vm, frame.complaint);
-	  }
+        ts_TRY (vm, frame)
+          {
+            ts_run (vm, word);
+            
+            fclose (fp);
+            vm->output = output;
+            vm->input = input;
+            ts_POP_TRY (vm, frame);
+          }
+        ts_EXCEPT (vm, frame)
+          {
+            fclose (fp);
+            vm->output = output;
+            vm->input = input;
+            ts_escape (vm, frame.complaint);
+          }
       }
     }
 }
@@ -1451,9 +1451,9 @@ ts_with_io_on_file (ts_VM *vm, ts_Word *pw)
   ts_INPUT_3 (vm, filename, mode, word);
   ts_OUTPUT_0 ();
   with_io_on_file (vm,
-		   ts_data_byte (vm, filename), 
-		   ts_data_byte (vm, mode), 
-		   word);
+                   ts_data_byte (vm, filename), 
+                   ts_data_byte (vm, mode), 
+                   word);
 }
 
 /* Read and execute source code from the file named `filename',
@@ -1468,24 +1468,24 @@ ts_load (ts_VM *vm, const char *filename)
   else
     {
       ts_TRY (vm, frame)
-	{
-	  ts_set_input_file_stream (vm, fp, filename);
-	  ts_loading_loop (vm);
+        {
+          ts_set_input_file_stream (vm, fp, filename);
+          ts_loading_loop (vm);
 
-	  /* FIXME: on return, token_place could still point at filename,
-	     which might get freed anytime after.  Null it out or something. */
-	  fclose (fp);
-	  vm->mode = '(';	/* should probably move this into callee */
-	  vm->input = saved;
-	  ts_POP_TRY (vm, frame);
-	}
+          /* FIXME: on return, token_place could still point at filename,
+             which might get freed anytime after.  Null it out or something. */
+          fclose (fp);
+          vm->mode = '(';       /* should probably move this into callee */
+          vm->input = saved;
+          ts_POP_TRY (vm, frame);
+        }
       ts_EXCEPT (vm, frame)
-	{
-	  fclose (fp);
-	  vm->mode = '(';
-	  vm->input = saved;
-	  ts_escape (vm, frame.complaint);
-	}
+        {
+          fclose (fp);
+          vm->mode = '(';
+          vm->input = saved;
+          ts_escape (vm, frame.complaint);
+        }
     }
 }
 

@@ -35,7 +35,7 @@ main (int argc, char **argv)
     {
       int i;
       for (i = 1; i < argc; ++i)
-	ts_load_string (vm, argv[i]);
+        ts_load_string (vm, argv[i]);
     }
 
   ts_vm_unmake (vm);

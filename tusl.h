@@ -21,9 +21,9 @@
 #endif
 
 /* Configuration constants */
-enum { ts_stack_size = 1024 };	/* Max. depth of the data stack */
-enum { ts_data_size = 65536 };	/* Max. # of bytes in the data area */
-				/*  (must be a multiple of sizeof(int) */
+enum { ts_stack_size = 1024 };  /* Max. depth of the data stack */
+enum { ts_data_size = 65536 };  /* Max. # of bytes in the data area */
+                                /*  (must be a multiple of sizeof(int) */
 enum { ts_dictionary_size = 2048 }; /* Max. # of dictionary entries */
 
 /* Forward declarations */
@@ -39,9 +39,9 @@ typedef const char *ts_ErrorFn (ts_VM *vm, const char *format, va_list args);
 
 /* Chain of exception handlers */
 struct ts_Handler_frame {
-  jmp_buf state;		/* longjmp() target to the handler */
-  ts_Handler_frame *next;	/* Enclosing handler frames */
-  const char *complaint;	/* The exception being raised */
+  jmp_buf state;                /* longjmp() target to the handler */
+  ts_Handler_frame *next;       /* Enclosing handler frames */
+  const char *complaint;        /* The exception being raised */
   /* TODO: add a saved data stack pointer to all frames? */
 };
 
@@ -70,45 +70,45 @@ typedef struct ts_Place {
 
 /* An input/output source/sink */
 struct ts_Stream {
-  char buffer[256];		/* Holding area for input/output bytes */
-  char *ptr;			/* The next available byte in buffer */
-  char *limit;			/* The first unavailable byte in buffer */
-  ts_Streamer *streamer;	/* How to flush or refill buffer */
-  void *data;			/* streamer's private data */
-  ts_Place place;		/* Position of next byte to be processed */
-				/*  (we only keep place current for inputs) */
+  char buffer[256];             /* Holding area for input/output bytes */
+  char *ptr;                    /* The next available byte in buffer */
+  char *limit;                  /* The first unavailable byte in buffer */
+  ts_Streamer *streamer;        /* How to flush or refill buffer */
+  void *data;                   /* streamer's private data */
+  ts_Place place;               /* Position of next byte to be processed */
+                                /*  (we only keep place current for inputs) */
 };
 
 /* A dictionary entry */
 struct ts_Word {
-  ts_Action *action;		/* How to execute this word */
-  int datum;			/* Private argument for action */
-  char *name;			/* This word's name */
+  ts_Action *action;            /* How to execute this word */
+  int datum;                    /* Private argument for action */
+  char *name;                   /* This word's name */
 };
 
 /* A TUSL virtual machine */
 struct ts_VM {
-  int stack[ts_stack_size];	/* The data stack; grows upwards */
-  int sp;			/* Offset in bytes of the top stack entry */
-  int *pc;			/* Ptr to the next instruction to execute */
-  char data[ts_data_size];	/* The data area; holds instructions, etc. */
-  int here;			/* The next free byte within data[] */
-  int there;			/* The first occupied byte of string space */
+  int stack[ts_stack_size];     /* The data stack; grows upwards */
+  int sp;                       /* Offset in bytes of the top stack entry */
+  int *pc;                      /* Ptr to the next instruction to execute */
+  char data[ts_data_size];      /* The data area; holds instructions, etc. */
+  int here;                     /* The next free byte within data[] */
+  int there;                    /* The first occupied byte of string space */
   ts_Word words[ts_dictionary_size]; /* The dictionary */
-  int where;			/* The next free entry in words[] */
-  int local_words;		/* # of locals at the end of words[] */
-  char local_names[256];	/* Space for the names of locals */
-  int local_names_ptr;		/* The next free index in local_names[] */
-  char mode;			/* How to interpret the next source token */
-  ts_Stream output;		/* The current output sink */
-  ts_Stream input;		/* The current input source */
-  ts_Place token_place;	        /* The position of the last token scanned */
-  ts_ErrorFn *error;		/* How to report an error */
-  void *error_data;		/* Private data for error() */
-  ts_TraceFn *tracer;		/* How to trace an instruction execution */
-  void *tracer_data;		/* Private data for tracer() */
+  int where;                    /* The next free entry in words[] */
+  int local_words;              /* # of locals at the end of words[] */
+  char local_names[256];        /* Space for the names of locals */
+  int local_names_ptr;          /* The next free index in local_names[] */
+  char mode;                    /* How to interpret the next source token */
+  ts_Stream output;             /* The current output sink */
+  ts_Stream input;              /* The current input source */
+  ts_Place token_place;         /* The position of the last token scanned */
+  ts_ErrorFn *error;            /* How to report an error */
+  void *error_data;             /* Private data for error() */
+  ts_TraceFn *tracer;           /* How to trace an instruction execution */
+  void *tracer_data;            /* Private data for tracer() */
   ts_CTraceFn *colon_tracer;    /* How to trace a colon definition */
-  void *colon_tracer_data;	/* Private data for colon_tracer() */
+  void *colon_tracer_data;      /* Private data for colon_tracer() */
   ts_Handler_frame *handler_stack; /* Currently ready exception handlers */
 };
 
@@ -129,11 +129,11 @@ void ts_run (ts_VM *vm, int word);
 void ts_error (ts_VM *vm, const char *format, ...);
 
 void ts_set_stream (ts_Stream *stream, ts_Streamer *streamer, void *data,
-		    const char *opt_filename);
+                    const char *opt_filename);
 void ts_set_input_file_stream (ts_VM *vm, FILE *stream, 
-			       const char *opt_filename);
+                               const char *opt_filename);
 void ts_set_output_file_stream (ts_VM *vm, FILE *stream, 
-				const char *opt_filename);
+                                const char *opt_filename);
 void ts_set_input_string (ts_VM *vm, const char *string);
 
 void ts_interactive_loop (ts_VM *vm);
