@@ -29,3 +29,13 @@ Or run with no arguments to get an interactive prompt:
   $ ./runtusl
   ( 2 3 + .
   5 ( 
+
+
+CURSES
+
+There's a basic curses wrapper:
+
+  $ make runcurst
+  $ ./runcurst '"eg-curses/sokoban.ts" load play'
+
+(Do it in a terminal window, not under Emacs, etc.)
