@@ -121,8 +121,9 @@
 
 :read-here              here reading  here ;
 
-:read-integer           here read-line  
-                        here parse-integer (unless) drop 0 ;
+:read-integer           \ fall through...
+:read-number            here read-line  
+                        here parse-number (unless) drop 0 ;
 
 \ XXX interpret the whole line
 :interpret              find drop execute ;

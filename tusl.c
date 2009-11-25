@@ -436,6 +436,14 @@ put_decimal (ts_VM *vm, int n)
   ts_put_string (vm, s, sprintf (s, "%d", n));
 }
 
+/* Write d, formatted as a decimal float number, to vm's output. */
+static void
+put_double (ts_VM *vm, double d)
+{
+  char s[42];
+  ts_put_string (vm, s, sprintf (s, "%.20g", d));
+}
+
 
 /* The dictionary */
 
@@ -964,17 +972,24 @@ parse_number (int *result, const char *text)
       errno = 0;
       value = strtoul (text, &endptr, 0);
       if ('\0' != *endptr || ERANGE == errno)
-        return no;
+	{
+	  /* Ugly hack to more or less support float constants */
+	  float fvalue;
+	  errno = 0, fvalue = (float) strtod (text, &endptr);
+	  if (!all_blank (endptr) || ERANGE == errno)
+	    return no;
+	  value = *(int *)&fvalue;
+	}
     }
 
   *result = value;
   return yes;
 }
 
-/* Convert a string to integer; push the result and a success/failure flag. 
+/* Convert a string to number; push the result and a success/failure flag. 
    (On failure, the 'result' is the original string.) */
 void 
-ts_parse_integer (ts_VM *vm, ts_Word *pw)
+ts_parse_number (ts_VM *vm, ts_Word *pw)
 {
   ts_INPUT_1 (vm, z);
   int n = 0;
@@ -1086,6 +1101,22 @@ ts_run_int_4 (ts_VM *vm, ts_Word *pw)
   ts_OUTPUT_1 (f (w, x, y, z));
 }
 
+
+/* Floating-point primitives.  These are easy to misuse since floats
+   get mixed with ints on the stack without any typechecking. */
+
+static INLINE float i2f (int i) { return *(float*)&i; }
+static INLINE int f2i (float f) { return *(int*)&f; }
+
+define2 (ts_fadd, ts_OUTPUT_1 (f2i (i2f (y) + i2f (z))); )
+define2 (ts_fsub, ts_OUTPUT_1 (f2i (i2f (y) - i2f (z))); )
+define2 (ts_fmul, ts_OUTPUT_1 (f2i (i2f (y) * i2f (z))); )
+define2 (ts_fdiv, ts_OUTPUT_1 (f2i (i2f (y) / i2f (z))); )
+
+define1 (ts_fprint, ts_OUTPUT_0 (); 
+	            put_double (vm, i2f (z)); ts_put_char (vm, ' '); )
+
+
 /* Add all the safe built-in primitives to vm's dictionary. */
 void
 ts_install_standard_words (ts_VM *vm)
@@ -1129,7 +1160,7 @@ ts_install_standard_words (ts_VM *vm)
   ts_install (vm, "find",         ts_find, 0);
   ts_install (vm, "string,",      ts_string_comma, 0);
 
-  ts_install (vm, "parse-integer", ts_parse_integer, 0);
+  ts_install (vm, "parse-number", ts_parse_number, 0);
 
   ts_install (vm, "emit",         ts_emit, 0);
   ts_install (vm, ".",            ts_print, 0);
@@ -1145,6 +1176,12 @@ ts_install_standard_words (ts_VM *vm)
   ts_install (vm, ".s",           ts_print_stack, 0);
   ts_install (vm, "start-tracing",ts_start_tracing, 0);
   ts_install (vm, "stop-tracing", ts_stop_tracing, 0);
+
+  ts_install (vm, "f+",           ts_fadd, 0);
+  ts_install (vm, "f-",           ts_fsub, 0);
+  ts_install (vm, "f*",           ts_fmul, 0);
+  ts_install (vm, "f/",           ts_fdiv, 0);
+  ts_install (vm, "f.",           ts_fprint, 0);
 
   /* Extras for efficiency */
   ts_install (vm, "0<",           ts_is_negative, 0);
