@@ -154,6 +154,7 @@ ts_Action ts_run_void_1;
 ts_Action ts_run_void_2;
 ts_Action ts_run_void_3;
 ts_Action ts_run_void_4;
+ts_Action ts_run_void_5;
 
 ts_Action ts_run_int_0;
 ts_Action ts_run_int_1;
@@ -208,6 +209,7 @@ ts__fix_stack_fn (ts_VM *vm, int delta)
 #define ts__pop2(vm,n,y,z)     ts__pop1(vm,n,y);    int z = ts__sr(ts__vm,2-(n))
 #define ts__pop3(vm,n,x,y,z)   ts__pop2(vm,n,x,y);  int z = ts__sr(ts__vm,3-(n))
 #define ts__pop4(vm,n,w,x,y,z) ts__pop3(vm,n,w,x,y);int z = ts__sr(ts__vm,4-(n))
+#define ts__pop5(vm,n,v,w,x,y,z) ts__pop4(vm,n,v,w,x,y);int z = ts__sr(ts__vm,5-(n))
 
 #define ts__fix_stack(pushing) ts__fix_stack_fn (ts__vm,(pushing)-ts__popped)
 
@@ -221,6 +223,7 @@ ts__fix_stack_fn (ts_VM *vm, int delta)
 #define ts_INPUT_2(vm, c,d)     ts__pop2 (vm,2,c,d)
 #define ts_INPUT_3(vm, c,d,e)   ts__pop3 (vm,3,c,d,e)
 #define ts_INPUT_4(vm, c,d,e,f) ts__pop4 (vm,4,c,d,e,f)
+#define ts_INPUT_5(vm, c,d,e,f,g) ts__pop5 (vm,5,c,d,e,f,g)
 
 #define ts_OUTPUT_0()           (ts__fix_stack (0))
 #define ts_OUTPUT_1(z)          (ts__fix_stack (1), ts__push1 (z))

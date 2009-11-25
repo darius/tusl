@@ -1037,6 +1037,16 @@ ts_run_void_4 (ts_VM *vm, ts_Word *pw)
 }
 
 void
+ts_run_void_5 (ts_VM *vm, ts_Word *pw)
+{
+  void (*f)(int, int, int, int, int) = 
+    (void (*)(int, int, int, int, int)) pw->datum;
+  ts_INPUT_5 (vm, v, w, x, y, z);
+  ts_OUTPUT_0 ();
+  f (v, w, x, y, z);
+}
+
+void
 ts_run_int_0 (ts_VM *vm, ts_Word *pw)
 {
   int (*f)(void) = (int (*)(void)) pw->datum;
