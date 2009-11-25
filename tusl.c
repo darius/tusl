@@ -583,7 +583,7 @@ ts_vm_make (void)
   vm->where = 0;
   vm->local_words = 0;
   vm->mode = '(';
-  ts_disable_IO(vm);
+  ts_disable_IO (vm);
   vm->token_place = vm->input.place;
   vm->error = default_error;
   vm->error_data = NULL;
@@ -855,6 +855,7 @@ define0 (ts_absorb,       ts_OUTPUT_1 (get_char (vm)); )
 define1 (ts_prim_error,   ts_OUTPUT_0 (); 
                           ts_error (vm, "%s", ts_data_byte (vm, z)); )
 
+define0 (ts_repl,         ts_OUTPUT_0 (); ts_load_interactive (vm, stdin); )
 define1 (ts_prim_load,    ts_OUTPUT_0 (); ts_load (vm, ts_data_byte (vm, z)); )
 
 /* Pop the top of stack (call it z), and change the last-defined word
@@ -983,7 +984,6 @@ ts_parse_integer (ts_VM *vm, ts_Word *pw)
     ts_OUTPUT_2 (n, yes);
   else
     ts_OUTPUT_2 (z, no);
-
 }
 
 
@@ -1164,6 +1164,7 @@ ts_install_unsafe_words (ts_VM *vm)
   ts_install (vm, "+!u",          ts_plus_storeu, 0);
 
   ts_install (vm, "with-io-on-file", ts_with_io_on_file, 0);
+  ts_install (vm, "repl",         ts_repl, 0);
   ts_install (vm, "load",         ts_prim_load, 0);
 }
 
