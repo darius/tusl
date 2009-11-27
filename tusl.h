@@ -127,6 +127,7 @@ void ts_install_unsafe_words (ts_VM *vm);
 
 void ts_run (ts_VM *vm, int word);
 void ts_error (ts_VM *vm, const char *format, ...);
+void ts_die (const char *plaint);
 
 void ts_set_stream (ts_Stream *stream, ts_Streamer *streamer, void *data,
                     const char *opt_filename);

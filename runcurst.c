@@ -10,8 +10,7 @@
 static void
 panic (void)
 {
-  fprintf (stderr, "%s", strerror (errno));
-  exit (1);
+  ts_die (strerror (errno));
 }
 
 static void

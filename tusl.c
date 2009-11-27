@@ -71,16 +71,21 @@ print_place (char **dest, int *dest_size, const ts_Place *place)
 
 /* Exceptions */
 
+/* Complain and terminate the process. */
+void
+ts_die (const char *plaint)
+{
+  fprintf (stderr, "%s\n", plaint);
+  exit (1);
+}
+
 /* Pop the current exception handler and jump to it. */
 void 
 ts_escape (ts_VM *vm, const char *complaint)
 {
   ts_Handler_frame *frame = vm->handler_stack;
   if (NULL == frame)
-    {
-      fprintf (stderr, "%s\n", complaint);
-      exit (1);
-    }
+    ts_die (complaint);
   vm->handler_stack = frame->next;
   frame->complaint = complaint;
   longjmp (frame->state, 1);
