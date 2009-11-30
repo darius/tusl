@@ -85,25 +85,38 @@
                         random-seed @ ;
 
 
+\ Hex/ASCII dump
+
 :hex-digit              0xf and  "0123456789abcdef" + c@ ;
 :.hex-digit             hex-digit emit ;
 :.hex {u digits}        digits (when)  u 4 u>> digits 1- .hex  u .hex-digit ;
 :.byte                  2 .hex ;
 :.address               8 .hex ;  \XXX make leading 0s into spaces
 
-\ XXX might be simpler with lo..hi instead of addr,u
-:?.byte {a addr u}      addr a addr u + within 
-                          (if) a c@ .byte ;
-                        (then) space space ;
-:dump-line {a i addr u} i 16 < (if)
+:dump-byte {a A Z in out} A a Z within (if) a c@ in execute ;
+                                     (then) out execute ;
+:dump-line {a i A Z in out}
+                	i 16 < (when)
                           i 8 = (if) space (then)
-                          space  a i + addr u ?.byte
-                          a i 1+ addr u dump-line ;
-                        (then) cr
-                        a 16 +  addr a - u + 16 -      \ fall through...
-:dump {addr u}          u 0> (when)
-                          addr -16 and .address  $: emit
-                          addr -16 and 0  addr u  dump-line ;
+                          a i + A Z in out dump-byte
+                          a i 1+ A Z in out dump-line ;
+
+:.byte-in               space .byte ;
+:.byte-out              space space space ;
+:dump-bytes {a A Z}     a 0 A Z '.byte-in '.byte-out dump-line ;
+
+:printable {c}          32 c 127 within (if) c ; (then) $. ;
+:.printable             printable emit ;
+:dump-chars {a A Z}     a 0 A Z '.printable 'space dump-line ;
+
+:dump {a u}             a -16 and  a  a u +  \ fall through
+:dumping {a A Z}	a Z u< (when)
+                           a .address  $: emit
+                           a A Z dump-bytes  space space
+                           a A Z dump-chars  cr
+                           a 16 + A Z dumping ;
+
+\ Stuff for Alph
 
 :reading                absorb {addr char}
                         char 0< (if)  0 addr c! ;  (then)
