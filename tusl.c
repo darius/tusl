@@ -461,15 +461,19 @@ enum {
   LOCAL2,
   LOCAL3,
   LOCAL4,
+  LOCAL5,
   GRAB1,
   GRAB2,
   GRAB3,
   GRAB4,
   GRAB5,
+  GRAB6,
   WILL,
   DO_WILL,
   LAST_SPECIAL_PRIM = DO_WILL
 };
+
+enum { max_locals = 6 };
 
 /* Return the index of the last-defined word named `name', or else
    ts_not_found. */
@@ -513,8 +517,6 @@ ts_install (ts_VM *vm, char *name, ts_Action *action, int datum)
     w->name = name;
   }
 }
-
-enum { max_locals = 5 };
 
 /* Add 'name' to the current set of local variables. */
 static void
@@ -607,7 +609,7 @@ ts_vm_make (void)
   vm->handler_stack = NULL;
 
   /* Internals depend on the order of these first definitions;
-     see enums below. */
+     see enums above. */
   ts_install (vm, ";",            NULL, 0);
   ts_install (vm, "<<literal>>",  ts_do_literal, 0);
   ts_install (vm, "<<branch>>",   ts_do_branch, 0);
@@ -616,11 +618,13 @@ ts_vm_make (void)
   ts_install (vm, "x",            NULL, 0);
   ts_install (vm, "w",            NULL, 0);
   ts_install (vm, "v",            NULL, 0);
+  ts_install (vm, "u",            NULL, 0);
   ts_install (vm, "z-",           NULL, 0);
   ts_install (vm, "yz-",          NULL, 0);
   ts_install (vm, "xyz-",         NULL, 0);
   ts_install (vm, "wxyz-",        NULL, 0);
   ts_install (vm, "vwxyz-",       NULL, 0);
+  ts_install (vm, "uvwxyz-",      NULL, 0);
   ts_install (vm, ";will",        NULL, 0);
   ts_install (vm, "<<will>>",     ts_do_will, 0);
   /* XXX I should initialize the actions of all remaining dictionary
