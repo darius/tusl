@@ -1,3 +1,6 @@
+our exception macros could be better:
+http://code.google.com/p/cii/source/browse/trunk/include/except.h
+
 make it more robust for when you're calling a word that wasn't fully
 defined because it tried to use an undefined word. E.g.:
 

@@ -153,5 +153,5 @@
 :over {x y}             x y x ;
 :rot {x y z}            y z x ;
 
-:and-also               '0= , if 'false , '; , then ;
-:or-else                if 'true , '; , then ;
+:&&                     '0= , if 'false , '; , then ;
+:||                     if 'true , '; , then ;
