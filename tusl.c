@@ -60,12 +60,12 @@ print_place (char **dest, int *dest_size, const ts_Place *place)
                              "%s:", place->opt_filename));
       *dest += n, *dest_size -= n;
     }
-    {
-      int n = min (*dest_size,
-                   snprintf (*dest, *dest_size, 
-                             "%d.%d: ", place->line, place->column));
-      *dest += n, *dest_size -= n;
-    }
+  {
+    int n = min (*dest_size,
+                 snprintf (*dest, *dest_size, 
+                           "%d.%d: ", place->line, place->column));
+    *dest += n, *dest_size -= n;
+  }
 }
 
 
