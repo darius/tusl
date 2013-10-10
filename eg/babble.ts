@@ -24,7 +24,7 @@
 
 \ The random text snippets that we'll stitch together
 
-:pick {u}        random u umod ;  \ Pick a random number less than u.
+:pick {u}       random u umod ;  \ Pick a random number less than u.
 
 \ A table, given an index u, returns the u'th following entry.
 :table          given  ;will {u a}  u cells a + @ ;
