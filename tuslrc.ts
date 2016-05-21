@@ -96,7 +96,7 @@
 :dump-byte {a A Z in out} A a Z within (if) a c@ in execute ;
                                      (then) out execute ;
 :dump-line {a i A Z in out}
-                	i 16 < (when)
+                        i 16 < (when)
                           i 8 = (if) space (then)
                           a i + A Z in out dump-byte
                           a i 1+ A Z in out dump-line ;
@@ -110,7 +110,7 @@
 :dump-chars {a A Z}     a 0 A Z '.printable 'space dump-line ;
 
 :dump {a u}             a -16 and  a  a u +  \ fall through
-:dumping {a A Z}	a Z u< (when)
+:dumping {a A Z}        a Z u< (when)
                            a .address  $: emit
                            a A Z dump-bytes  space space
                            a A Z dump-chars  cr
