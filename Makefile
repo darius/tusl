@@ -1,5 +1,5 @@
-CFLAGS := -Wall -g2 -O2
-LDFLAGS := -lncurses
+CFLAGS := -Wall -g2 -O2 -m32 -fno-strict-aliasing
+LDFLAGS := -m32
 
 all: runtusl libtusl.a
 
@@ -18,6 +18,8 @@ libtusl.a: tusl.o
 tusl.o: tusl.c tusl.h 
 
 runcurst: runcurst.o tusl.o
+	cc -lncurses $(LDFLAGS) $<
+
 runcurst.o: runcurst.c tusl.h 
 
 clean:
