@@ -81,6 +81,8 @@
 
 
 :random-seed            (1234567 variable)
+\ XXX wrong: you need u*/mod instead to keep the 64-bit intermediate.
+\ https://en.wikipedia.org/wiki/Lehmer_random_number_generator
 :random                 random-seed @  16807 u*  2147483647 umod  random-seed !
                         random-seed @ ;
 
