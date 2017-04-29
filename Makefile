@@ -1,7 +1,7 @@
 CFLAGS := -Wall -g2 -O2 -m32 -fno-strict-aliasing
 LDFLAGS := -m32
 
-all: runtusl libtusl.a
+all: runtusl libtusl.a runansi
 
 install: tusl.h libtusl.a tuslrc.ts
 	install tusl.h /usr/local/include
@@ -17,10 +17,13 @@ libtusl.a: tusl.o
 
 tusl.o: tusl.c tusl.h 
 
+runansi: runansi.o tusl.o
+runansi.o: runansi.c tusl.h 
+
 runcurst: runcurst.o tusl.o
 	cc -lncurses $(LDFLAGS) $<
 
 runcurst.o: runcurst.c tusl.h 
 
 clean:
-	rm -f *.o *.a runtusl runcurst
+	rm -f *.o *.a runtusl runansi runcurst
