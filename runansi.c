@@ -99,14 +99,39 @@ do_screen_size(ts_VM *vm, ts_Word *pw) {
     ts_OUTPUT_2(COLS, ROWS);
 }
 
-static void
-do_get_key(ts_VM *vm, ts_Word *pw) {
+static int
+get_byte(void) {
     // from http://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html
     int nread;
     char c;
     while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
         if (nread == -1 && errno != EAGAIN) panic();
     }
+    return (int) (unsigned char) c;
+}
+
+static int
+get_key(void) {
+    int c = get_byte();
+    if (c != '\x1b') return c;
+    // escape sequence
+    c = get_byte();
+    if (c != '[') return 0x100 | c;
+    c = get_byte();
+    switch (c) {
+    case 'A': 
+    case 'B': 
+    case 'C': 
+    case 'D': 
+        // TODO find some standard keycodes for these
+        return 0x200 | c;
+    }
+    return 0x400 | c;
+}
+
+static void
+do_get_key(ts_VM *vm, ts_Word *pw) {
+    int c = get_key();
     ts_INPUT_0(vm);
     ts_OUTPUT_1(c);
 }
