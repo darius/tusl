@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -118,15 +119,25 @@ get_key(void) {
     c = get_byte();
     if (c != '[') return 0x100 | c;
     c = get_byte();
+    if (isdigit(c)) {
+        int accum = c - '0';
+        c = get_byte();
+        if (isdigit(c)) {
+            accum = 10 * accum + c - '0';
+            c = get_byte();
+        }
+        if (c == '~') return 0x200 | accum;  // various special keys
+        return 0xFFFF;          // XXX giving up
+    }
     switch (c) {
     case 'A': 
     case 'B': 
     case 'C': 
     case 'D': 
         // TODO find some standard keycodes for these
-        return 0x200 | c;
+        return 0x400 | c;  // some other special keys
     }
-    return 0x400 | c;
+    return 0x800 | c;
 }
 
 static void
