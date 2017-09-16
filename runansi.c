@@ -15,7 +15,7 @@ panic(void) {
 
 #define ANSI "\033["
 
-enum { COLS = 80, ROWS = 25 }; // for now
+enum { COLS = 80, ROWS = 37 }; // for now
 
 static char showing[ROWS][COLS];
 static char pending[ROWS][COLS];
@@ -28,6 +28,7 @@ setup(void) {
     memset(showing, ' ', sizeof showing);
     memset(pending, ' ', sizeof pending);
 
+    // TODO make this idempotent? (currently overwrites orig_termios)
     // from http://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html
     if (tcgetattr(STDIN_FILENO, &orig_termios) == -1) panic();
     struct termios raw = orig_termios;

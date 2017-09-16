@@ -14,7 +14,7 @@
 
 (screen-setup)
 (screen-size :height (1- constant) :width (constant)
-\(screen-teardown)
+(screen-teardown)
 
 :messages       (here constant  width bl allot-filled)
 
@@ -157,7 +157,7 @@
 :editing        blast-page  coords screen-refresh
                 get-key {key}  key $Q ctrl = (unless)
                   key react
-                  key .notify
+\                  key .notify
                   editing ;
 
 :?complain {plaint}
