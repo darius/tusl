@@ -132,6 +132,8 @@
                 k $P ctrl = (if)  backward-line ;   (then)
                 k $S ctrl = (if)  save ;            (then)
                 k $T ctrl = (if)  transpose-chars ; (then)
+                k $V ctrl = (if)  forward-page ;    (then)
+                k   0x176 = (if)  backward-page ;   (then)
                 k   0x07f = (if)  backspace ;       (then)
                 k   0x441 = (if)  backward-line ;   (then)
                 k   0x442 = (if)  forward-line ;    (then)
