@@ -13,8 +13,8 @@
 :dup {x}                x x ;
 :swap {x y}             y x ;
 
-:4+ :cell+              2+ 2+ ;
-:4- :cell-              2- 2- ;
+:cell+                  1 cells + ;   \ XXX worth making primitive?
+:cell-                  1 cells - ;
 
 :negate {n}             0 n - ;
 

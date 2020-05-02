@@ -9,6 +9,25 @@
 #include <stdio.h>
 #include <setjmp.h>
 
+/* Edit here to configure -------------------------------------------- */
+#if 0
+/* For 32-bit systems */
+typedef int tsint;              /* TODO call it ts_Cell or something? */
+typedef unsigned int tsuint;
+typedef float tsfloat;
+#else
+/* For 64-bitters */
+typedef long long int tsint;
+typedef unsigned long long int tsuint;
+typedef double tsfloat;
+#endif
+enum { ts_stack_size = 1024 };  /* Max. depth of the data stack */
+enum { ts_data_size = 65536 };  /* Max. # of bytes in the data area */
+                                /*  (must be a multiple of sizeof(tsint) */
+enum { ts_dictionary_size = 2048 }; /* Max. # of dictionary entries */
+/* TODO static assert: tsuint, tsfloat, pointer types all same size as tsint */
+/* ------------------------------------------------------------------- */
+
 /* The `inline' keyword varies across compilers. */
 #if defined(__GNUC__)
 # define INLINE __inline__
@@ -19,12 +38,6 @@
 #else
 # define INLINE
 #endif
-
-/* Configuration constants */
-enum { ts_stack_size = 1024 };  /* Max. depth of the data stack */
-enum { ts_data_size = 65536 };  /* Max. # of bytes in the data area */
-                                /*  (must be a multiple of sizeof(int) */
-enum { ts_dictionary_size = 2048 }; /* Max. # of dictionary entries */
 
 /* Forward declarations */
 typedef struct ts_Handler_frame ts_Handler_frame;
@@ -82,15 +95,15 @@ struct ts_Stream {
 /* A dictionary entry */
 struct ts_Word {
   ts_Action *action;            /* How to execute this word */
-  int datum;                    /* Private argument for action */
+  tsint datum;                  /* Private argument for action */
   char *name;                   /* This word's name */
 };
 
 /* A TUSL virtual machine */
 struct ts_VM {
-  int stack[ts_stack_size];     /* The data stack; grows upwards */
+  tsint stack[ts_stack_size];   /* The data stack; grows upwards */
   int sp;                       /* Offset in bytes of the top stack entry */
-  int *pc;                      /* Ptr to the next instruction to execute */
+  tsint *pc;                    /* Ptr to the next instruction to execute */
   char data[ts_data_size];      /* The data area; holds instructions, etc. */
   int here;                     /* The next free byte within data[] */
   int there;                    /* The first occupied byte of string space */
@@ -115,17 +128,17 @@ struct ts_VM {
 ts_VM *ts_vm_make (void);
 void   ts_vm_unmake (ts_VM *vm);
 
-void ts_push (ts_VM *vm, int c);
-int  ts_pop (ts_VM *vm);
+void  ts_push (ts_VM *vm, tsint c);
+tsint ts_pop (ts_VM *vm);
 
-void ts_install (ts_VM *vm, char *name, ts_Action *action, int datum);
+void ts_install (ts_VM *vm, char *name, ts_Action *action, tsint datum);
 int  ts_lookup (ts_VM *vm, const char *name);
 enum { ts_not_found = -1 };
 
 void ts_install_standard_words (ts_VM *vm);
 void ts_install_unsafe_words (ts_VM *vm);
 
-void ts_run (ts_VM *vm, int word);
+void ts_run (ts_VM *vm, tsint word);
 void ts_error (ts_VM *vm, const char *format, ...);
 void ts_die (const char *plaint);
 
@@ -202,15 +215,15 @@ ts__fix_stack_fn (ts_VM *vm, int delta)
   vm->sp = ts__spadd (vm, delta);
 }
 
-#define ts__sr(vm, i) (*(int *)((char *) vm->stack + ts__spadd (vm,i)))
+#define ts__sr(vm, i) (*(tsint *)((char *) vm->stack + ts__spadd (vm,i)))
 
 #define ts__pop0(vm, n)        ts_VM *ts__vm = (vm); \
                                const int ts__popped=ts__popping(ts__vm,n)
-#define ts__pop1(vm,n,z)       ts__pop0(vm,n);      int z = ts__sr(ts__vm,1-(n))
-#define ts__pop2(vm,n,y,z)     ts__pop1(vm,n,y);    int z = ts__sr(ts__vm,2-(n))
-#define ts__pop3(vm,n,x,y,z)   ts__pop2(vm,n,x,y);  int z = ts__sr(ts__vm,3-(n))
-#define ts__pop4(vm,n,w,x,y,z) ts__pop3(vm,n,w,x,y);int z = ts__sr(ts__vm,4-(n))
-#define ts__pop5(vm,n,v,w,x,y,z) ts__pop4(vm,n,v,w,x,y);int z = ts__sr(ts__vm,5-(n))
+#define ts__pop1(vm,n,z)       ts__pop0(vm,n);      tsint z = ts__sr(ts__vm,1-(n))
+#define ts__pop2(vm,n,y,z)     ts__pop1(vm,n,y);    tsint z = ts__sr(ts__vm,2-(n))
+#define ts__pop3(vm,n,x,y,z)   ts__pop2(vm,n,x,y);  tsint z = ts__sr(ts__vm,3-(n))
+#define ts__pop4(vm,n,w,x,y,z) ts__pop3(vm,n,w,x,y);tsint z = ts__sr(ts__vm,4-(n))
+#define ts__pop5(vm,n,v,w,x,y,z) ts__pop4(vm,n,v,w,x,y);tsint z = ts__sr(ts__vm,5-(n))
 
 #define ts__fix_stack(pushing) ts__fix_stack_fn (ts__vm,(pushing)-ts__popped)
 

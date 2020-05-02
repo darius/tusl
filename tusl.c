@@ -140,17 +140,17 @@ stack_pointer (ts_VM *vm)
 }
 
 /* Return a native pointer to cell i in vm's data space. */
-static INLINE int *
+static INLINE tsint *
 data_cell (ts_VM *vm, int i)
 {
-  return (int *)ts_data_byte (vm, i);
+  return (tsint *)ts_data_byte (vm, i);
 }
 
 /* Return the first cell boundary at or after n. */
 static INLINE int
 cell_align (int n)
 {
-  return (n + sizeof(int) - 1) & ~(sizeof(int) - 1);
+  return (n + sizeof(tsint) - 1) & ~(sizeof(tsint) - 1);
 }
 
 static INLINE void
@@ -167,9 +167,9 @@ ensure_space (ts_VM *vm, size_t size)
     ts_error (vm, "Out of space");
 }
 
-/* Append an int to vm's data area. */
+/* Append a tsint to vm's data area. */
 static void
-compile (ts_VM *vm, int c)
+compile (ts_VM *vm, tsint c)
 {
   align_here (vm);
   ensure_space (vm, sizeof c);
@@ -214,14 +214,14 @@ ts_default_tracer (ts_VM *vm, unsigned word)
 
 /* Push `c' onto vm's stack. */
 void
-ts_push (ts_VM *vm, int c)
+ts_push (ts_VM *vm, tsint c)
 {
   ts_INPUT_0 (vm);
   ts_OUTPUT_1 (c);
 }
 
 /* Return the top popped off vm's stack. */
-int
+tsint
 ts_pop (ts_VM *vm)
 {
   ts_INPUT_1 (vm, z);
@@ -254,7 +254,7 @@ discard_input (ts_VM *vm)
 }
 
 /* Refill vm's input buffer from its input source, return the first
-   new character, and consume it if delta == 1.
+   new character, and consume it if delta.
    Pre: 0 <= delta <= 1 */
 static int
 refill (ts_VM *vm, int delta)
@@ -303,7 +303,8 @@ read_from_file (ts_VM *vm)
 {
   ts_Stream *input = &vm->input;
   FILE *fp = (FILE *) input->data;
-  /* FIXME: handle null bytes */
+  /* FIXME
+: handle null bytes */
   if (NULL != fgets (input->buffer, sizeof input->buffer, fp))
     return strlen (input->buffer); 
   if (ferror (fp))
@@ -317,7 +318,7 @@ write_to_file (ts_VM *vm)
 {
   ts_Stream *output = &vm->output;
   FILE *fp = (FILE *) output->data;
-  int n = output->ptr - output->buffer;
+  int n = output->ptr - output->buffer; /* XXX ptrdiff_t */
   if (n != fwrite (output->buffer, 1, n, fp))
     ts_error (vm, "Write error: %s", strerror (errno));
   return n;
@@ -392,6 +393,7 @@ peek_char (ts_VM *vm)
 }
 
 #if 0
+/* Variant that flushes each line. I forget why it's ifdefed out. */
 void
 ts_put_string (ts_VM *vm, const char *string, int size)
 {
@@ -445,7 +447,7 @@ put_decimal (ts_VM *vm, int n)
 static void
 put_double (ts_VM *vm, double d)
 {
-  char s[42];
+  char s[42]; /* XXX is there a standard constant for this? */
   ts_put_string (vm, s, sprintf (s, "%.20g", d));
 }
 
@@ -501,13 +503,13 @@ ts_lookup (ts_VM *vm, const char *name)
 /* Add a word named `name' to vm's dictionary.  The name is not copied,
    so you shouldn't reuse its characters for anything else. */
 void
-ts_install (ts_VM *vm, char *name, ts_Action *action, int datum)
+ts_install (ts_VM *vm, char *name, ts_Action *action, tsint datum)
 {
   if (ts_dictionary_size <= vm->where + vm->local_words)
     ts_error (vm, "Too many words");
   if (0)
     if (ts_not_found != ts_lookup (vm, name))
-      /* FIXME: this is pretty crude -- sometimes we won't want to be
+      /* XXX this is pretty crude -- sometimes we won't want to be
          bothered by these warnings */
       fprintf (stderr, "Warning: redefinition of %s\n", name);
   {
@@ -522,6 +524,7 @@ ts_install (ts_VM *vm, char *name, ts_Action *action, int datum)
 static void
 install_local (ts_VM *vm, const char *name)
 {
+  /* TODO: factor out commonality: maybe call ts_install() from here? */
   if (ts_dictionary_size <= vm->where + vm->local_words + 1)
     ts_error (vm, "Too many words");
   if (max_locals <= vm->local_words)
@@ -559,7 +562,7 @@ void
 ts_do_branch (ts_VM *vm, ts_Word *pw) 
 {
   ts_INPUT_1 (vm, z);
-  int y = vm->pc++[0];
+  tsint y = vm->pc++[0];
   if (0 == z)
     vm->pc = data_cell (vm, y);
   ts_OUTPUT_0 ();
@@ -638,7 +641,7 @@ ts_vm_make (void)
 
 /* Compile a literal value to be pushed at runtime. */
 static void
-compile_push (ts_VM *vm, int c)
+compile_push (ts_VM *vm, tsint c)
 {
   compile (vm, LITERAL);
   compile (vm, c);
@@ -654,8 +657,8 @@ do_sequence (ts_VM *vm, ts_Word *pw)
   if (NULL != vm->colon_tracer && vm->colon_tracer (vm, pw))
     return;
   {
-    int locals[max_locals];
-    int *old_pc = vm->pc;
+    tsint locals[max_locals];
+    tsint *old_pc = vm->pc;
     vm->pc = data_cell (vm, pw->datum);
 
     {                    /* TODO: eliminate overhead of setjmp here */
@@ -668,6 +671,7 @@ do_sequence (ts_VM *vm, ts_Word *pw)
               if (NULL != vm->tracer && vm->tracer (vm, word))
                 break;
 
+              /* TODO faster with a switch? */
               if (EXIT == word)
                 break;
               else if ((unsigned)(word - LOCAL0) < (unsigned)max_locals)
@@ -680,7 +684,7 @@ do_sequence (ts_VM *vm, ts_Word *pw)
                 }
               else if (WILL == word)
                 {
-                  /*
+                  /* TODO remind me, why does this need to be special?
                     Post:
                     word: action = ts_do_will, datum = p
                     p: script_location
@@ -753,7 +757,7 @@ ts_throw (ts_VM *vm, ts_Word *pw)
 
 /* Execute the word that's at the given dictionary index. */
 void
-ts_run (ts_VM *vm, int word)
+ts_run (ts_VM *vm, tsint word)
 {
   /* This is from do_sequence, minus the looping and the words that
      make no sense outside an instruction sequence. */
@@ -784,7 +788,7 @@ ts_do_will (ts_VM *vm, ts_Word *pw)
   phony.datum = *data_cell (vm, pw->datum);
   phony.name = NULL;
 
-  ts_push (vm, pw->datum + sizeof(int));
+  ts_push (vm, pw->datum + sizeof(tsint));
   do_sequence (vm, &phony);
 }
 
@@ -802,7 +806,7 @@ define0 (ts_do_push,      ts_OUTPUT_1 (pw->datum); )
 
 define1 (ts_make_literal, ts_OUTPUT_0 (); compile_push (vm, z); )
 define1 (ts_execute,      ts_OUTPUT_0 (); ts_run (vm, z); )
-define1 (ts_to_data,      ts_OUTPUT_1 ((int) ts_data_byte (vm, z)); )
+define1 (ts_to_data,      ts_OUTPUT_1 ((tsint) ts_data_byte (vm, z)); )
 define1 (ts_comma,        ts_OUTPUT_0 (); compile (vm, z); )
 define1 (ts_allot,        ts_OUTPUT_0 (); ensure_space (vm, z); vm->here += z;)
 define0 (ts_align_bang,   ts_OUTPUT_0 (); align_here (vm); )
@@ -814,7 +818,7 @@ define1 (ts_string_comma, ts_OUTPUT_1 (compile_string (vm,
                                                                      z))); )
 
 static INLINE void
-nonzero (ts_VM *vm, int z)
+nonzero (ts_VM *vm, tsint z)
 {
   if (0 == z)
     ts_error (vm, "Division by 0");
@@ -823,22 +827,22 @@ nonzero (ts_VM *vm, int z)
 define2 (ts_add,          ts_OUTPUT_1 (y + z); )
 define2 (ts_sub,          ts_OUTPUT_1 (y - z); )
 define2 (ts_mul,          ts_OUTPUT_1 (y * z); )
-define2 (ts_umul,         ts_OUTPUT_1 ((unsigned)y * (unsigned)z); )
+define2 (ts_umul,         ts_OUTPUT_1 ((tsuint)y * (tsuint)z); )
 define2 (ts_idiv, nonzero (vm, z); ts_OUTPUT_1 (y / z); )
 define2 (ts_imod, nonzero (vm, z); ts_OUTPUT_1 (y % z); )
-define2 (ts_udiv, nonzero (vm, z); ts_OUTPUT_1 ((unsigned)y / (unsigned)z); )
-define2 (ts_umod, nonzero (vm, z); ts_OUTPUT_1 ((unsigned)y % (unsigned)z); )
+define2 (ts_udiv, nonzero (vm, z); ts_OUTPUT_1 ((tsuint)y / (tsuint)z); )
+define2 (ts_umod, nonzero (vm, z); ts_OUTPUT_1 ((tsuint)y % (tsuint)z); )
 define2 (ts_eq,           ts_OUTPUT_1 (-(y == z)); )
 define2 (ts_lt,           ts_OUTPUT_1 (-(y < z)); )
-define2 (ts_ult,          ts_OUTPUT_1 (-((unsigned)y < (unsigned)z)); )
+define2 (ts_ult,          ts_OUTPUT_1 (-((tsuint)y < (tsuint)z)); )
 define2 (ts_and,          ts_OUTPUT_1 (y & z); )
 define2 (ts_or,           ts_OUTPUT_1 (y | z); )
 define2 (ts_xor,          ts_OUTPUT_1 (y ^ z); )
 define2 (ts_lshift,       ts_OUTPUT_1 (y << z); )
 define2 (ts_rshift,       ts_OUTPUT_1 (y >> z); )
-define2 (ts_urshift,      ts_OUTPUT_1 ((unsigned)y >> (unsigned)z); )
+define2 (ts_urshift,      ts_OUTPUT_1 ((tsuint)y >> (tsuint)z); )
 
-define1 (ts_fetchu,       ts_OUTPUT_1 (*(int *)z); )
+define1 (ts_fetchu,       ts_OUTPUT_1 (*(tsint *)z); )
 define1 (ts_cfetchu,      ts_OUTPUT_1 (*(unsigned char *)z); )
 define2 (ts_storeu,       ts_OUTPUT_0 (); *(int *)z = y; )
 define2 (ts_cstoreu,      ts_OUTPUT_0 (); *(unsigned char *)z = y; )
@@ -860,9 +864,9 @@ define1 (ts_sub2,         ts_OUTPUT_1 (z - 2); )
 define1 (ts_is_negative,  ts_OUTPUT_1 (-(z < 0)); )
 define1 (ts_is_zero,      ts_OUTPUT_1 (-(0 == z)); )
 define1 (ts_times2,       ts_OUTPUT_1 (z << 1); )
-define1 (ts_times4,       ts_OUTPUT_1 (z << 2); )
 define1 (ts_div2,         ts_OUTPUT_1 (z >> 1); )
-define1 (ts_div4,         ts_OUTPUT_1 (z >> 2); )
+define1 (ts_cells,        ts_OUTPUT_1 (z * sizeof(tsint)); )
+define1 (ts_uncells,      ts_OUTPUT_1 (z / sizeof(tsint)); ) // XXX round negative z correctly
 
 define1 (ts_emit,         ts_OUTPUT_0 (); ts_put_char (vm, z); )
 define1 (ts_print,        ts_OUTPUT_0 (); 
@@ -966,10 +970,10 @@ all_blank (const char *s)
 /* Try to parse text as a number (either signed or unsigned).
    Return yes iff successful, and set *result to the value. */
 static boolean
-parse_number (int *result, const char *text)
+parse_number (tsint *result, const char *text)
 {
   char *endptr;
-  int value;
+  tsint value;
 
   if ('\0' == text[0])
     return no;
@@ -983,11 +987,11 @@ parse_number (int *result, const char *text)
       if ('\0' != *endptr || ERANGE == errno)
 	{
 	  /* Ugly hack to more or less support float constants */
-	  float fvalue;
-	  errno = 0, fvalue = (float) strtod (text, &endptr);
+	  tsfloat fvalue;
+	  errno = 0, fvalue = (tsfloat) strtod (text, &endptr);
 	  if (!all_blank (endptr) || ERANGE == errno)
 	    return no;
-	  value = *(int *)&fvalue;
+	  value = *(tsint *)&fvalue;
 	}
     }
 
@@ -1001,7 +1005,7 @@ void
 ts_parse_number (ts_VM *vm, ts_Word *pw)
 {
   ts_INPUT_1 (vm, z);
-  int n = 0;
+  tsint n = 0;
   /* TODO: change this to have an interface more like strtol():
      output end_ptr, n, -ok */
   if (parse_number (&n, (const char *)ts_data_byte (vm, z)))
@@ -1013,7 +1017,7 @@ ts_parse_number (ts_VM *vm, ts_Word *pw)
 
 /* C interface primitives.  Each run_foo_n primitive calls its
    pw->datum as a C function pointer taking n arguments and returning
-   foo (either void or a single int value).  The n arguments are first
+   foo (either void or a single tsint value).  The n arguments are first
    popped from the stack (with the topmost as the rightmost argument).
    If there's a return value, it is then pushed on the stack. */
 
@@ -1027,7 +1031,7 @@ ts_run_void_0 (ts_VM *vm, ts_Word *pw)
 void
 ts_run_void_1 (ts_VM *vm, ts_Word *pw)
 {
-  void (*f)(int) = (void (*)(int)) pw->datum;
+  void (*f)(tsint) = (void (*)(tsint)) pw->datum;
   ts_INPUT_1 (vm, z);
   ts_OUTPUT_0 ();
   f (z);
@@ -1036,7 +1040,7 @@ ts_run_void_1 (ts_VM *vm, ts_Word *pw)
 void
 ts_run_void_2 (ts_VM *vm, ts_Word *pw)
 {
-  void (*f)(int, int) = (void (*)(int, int)) pw->datum;
+  void (*f)(tsint, tsint) = (void (*)(tsint, tsint)) pw->datum;
   ts_INPUT_2 (vm, y, z);
   ts_OUTPUT_0 ();
   f (y, z);
@@ -1045,7 +1049,7 @@ ts_run_void_2 (ts_VM *vm, ts_Word *pw)
 void
 ts_run_void_3 (ts_VM *vm, ts_Word *pw)
 {
-  void (*f)(int, int, int) = (void (*)(int, int, int)) pw->datum;
+  void (*f)(tsint, tsint, tsint) = (void (*)(tsint, tsint, tsint)) pw->datum;
   ts_INPUT_3 (vm, x, y, z);
   ts_OUTPUT_0 ();
   f (x, y, z);
@@ -1054,7 +1058,7 @@ ts_run_void_3 (ts_VM *vm, ts_Word *pw)
 void
 ts_run_void_4 (ts_VM *vm, ts_Word *pw)
 {
-  void (*f)(int, int, int, int) = (void (*)(int, int, int, int)) pw->datum;
+  void (*f)(tsint, tsint, tsint, tsint) = (void (*)(tsint, tsint, tsint, tsint)) pw->datum;
   ts_INPUT_4 (vm, w, x, y, z);
   ts_OUTPUT_0 ();
   f (w, x, y, z);
@@ -1063,8 +1067,8 @@ ts_run_void_4 (ts_VM *vm, ts_Word *pw)
 void
 ts_run_void_5 (ts_VM *vm, ts_Word *pw)
 {
-  void (*f)(int, int, int, int, int) = 
-    (void (*)(int, int, int, int, int)) pw->datum;
+  void (*f)(tsint, tsint, tsint, tsint, tsint) = 
+    (void (*)(tsint, tsint, tsint, tsint, tsint)) pw->datum;
   ts_INPUT_5 (vm, v, w, x, y, z);
   ts_OUTPUT_0 ();
   f (v, w, x, y, z);
@@ -1073,7 +1077,7 @@ ts_run_void_5 (ts_VM *vm, ts_Word *pw)
 void
 ts_run_int_0 (ts_VM *vm, ts_Word *pw)
 {
-  int (*f)(void) = (int (*)(void)) pw->datum;
+  tsint (*f)(void) = (tsint (*)(void)) pw->datum;
   ts_INPUT_0 (vm);
   ts_OUTPUT_1 (f ());
 }
@@ -1081,7 +1085,7 @@ ts_run_int_0 (ts_VM *vm, ts_Word *pw)
 void
 ts_run_int_1 (ts_VM *vm, ts_Word *pw)
 {
-  int (*f)(int) = (int (*)(int)) pw->datum;
+  tsint (*f)(tsint) = (tsint (*)(tsint)) pw->datum;
   ts_INPUT_1 (vm, z);
   ts_OUTPUT_1 (f (z));
 }
@@ -1089,7 +1093,7 @@ ts_run_int_1 (ts_VM *vm, ts_Word *pw)
 void
 ts_run_int_2 (ts_VM *vm, ts_Word *pw)
 {
-  int (*f)(int, int) = (int (*)(int, int)) pw->datum;
+  tsint (*f)(tsint, tsint) = (tsint (*)(tsint, tsint)) pw->datum;
   ts_INPUT_2 (vm, y, z);
   ts_OUTPUT_1 (f (y, z));
 }
@@ -1097,7 +1101,7 @@ ts_run_int_2 (ts_VM *vm, ts_Word *pw)
 void
 ts_run_int_3 (ts_VM *vm, ts_Word *pw)
 {
-  int (*f)(int, int, int) = (int (*)(int, int, int)) pw->datum;
+  tsint (*f)(tsint, tsint, tsint) = (tsint (*)(tsint, tsint, tsint)) pw->datum;
   ts_INPUT_3 (vm, x, y, z);
   ts_OUTPUT_1 (f (x, y, z));
 }
@@ -1105,7 +1109,7 @@ ts_run_int_3 (ts_VM *vm, ts_Word *pw)
 void
 ts_run_int_4 (ts_VM *vm, ts_Word *pw)
 {
-  int (*f)(int, int, int, int) = (int (*)(int, int, int, int)) pw->datum;
+  tsint (*f)(tsint, tsint, tsint, tsint) = (tsint (*)(tsint, tsint, tsint, tsint)) pw->datum;
   ts_INPUT_4 (vm, w, x, y, z);
   ts_OUTPUT_1 (f (w, x, y, z));
 }
@@ -1114,8 +1118,8 @@ ts_run_int_4 (ts_VM *vm, ts_Word *pw)
 /* Floating-point primitives.  These are easy to misuse since floats
    get mixed with ints on the stack without any typechecking. */
 
-static INLINE float i2f (int i) { return *(float*)&i; }
-static INLINE int f2i (float f) { return *(int*)&f; }
+static INLINE tsfloat i2f (tsint i) { return *(tsfloat*)&i; }
+static INLINE tsint f2i (tsfloat f) { return *(tsint*)&f; }
 
 define2 (ts_fadd, ts_OUTPUT_1 (f2i (i2f (y) + i2f (z))); )
 define2 (ts_fsub, ts_OUTPUT_1 (f2i (i2f (y) - i2f (z))); )
@@ -1199,11 +1203,10 @@ ts_install_standard_words (ts_VM *vm)
   ts_install (vm, "1+",           ts_add1, 0);
   ts_install (vm, "1-",           ts_sub1, 0);
   ts_install (vm, "2-",           ts_sub2, 0);
-  ts_install (vm, "cells",        ts_times4, 0);
-  ts_install (vm, "4*",           ts_times4, 0);
   ts_install (vm, "2*",           ts_times2, 0);
   ts_install (vm, "2/",           ts_div2, 0);
-  ts_install (vm, "4/",           ts_div4, 0);
+  ts_install (vm, "cells",        ts_cells, 0);
+  ts_install (vm, "cell/",        ts_uncells, 0);
 }
 
 /* Add all the unsafe built-in primitives to vm's dictionary.  That
@@ -1212,6 +1215,7 @@ ts_install_standard_words (ts_VM *vm)
 void
 ts_install_unsafe_words (ts_VM *vm)
 {
+  // XXX the u suffix is confusing: you think of 'unsigned' instead
   ts_install (vm, ">data",        ts_to_data, 0);
   ts_install (vm, "@u",           ts_fetchu, 0);
   ts_install (vm, "!u",           ts_storeu, 0);
@@ -1383,7 +1387,7 @@ dispatch (ts_VM *vm, const char *token)
             ('(' == vm->mode ? ts_run : compile) (vm, word);
           else
             {         /* handle it if it's a literal number */
-              int value;
+              tsint value;
               if (parse_number (&value, token))
                 ('(' == vm->mode ? ts_push : compile_push) (vm, value);
               else
@@ -1529,7 +1533,7 @@ ts_load (ts_VM *vm, const char *filename)
           ts_set_input_file_stream (vm, fp, filename);
           ts_loading_loop (vm);
 
-          /* FIXME: on return, token_place could still point at filename,
+          /* XXX on return, token_place could still point at filename,
              which might get freed anytime after.  Null it out or something. */
           fclose (fp);
           vm->mode = '(';       /* should probably move this into callee */

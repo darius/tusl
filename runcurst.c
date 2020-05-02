@@ -82,12 +82,12 @@ do_screen_size (ts_VM *vm, ts_Word *pw)
 static void
 install_curses_words (ts_VM *vm)
 {
-  ts_install (vm, "screen-setup",    ts_run_void_0, (int) setup);
-  ts_install (vm, "screen-teardown", ts_run_void_0, (int) teardown);
+  ts_install (vm, "screen-setup",    ts_run_void_0, (tsint) setup);
+  ts_install (vm, "screen-teardown", ts_run_void_0, (tsint) teardown);
   ts_install (vm, "screen-blast",    do_blast, 0);
   ts_install (vm, "screen-refresh",  do_refresh, 0);
   ts_install (vm, "screen-size",     do_screen_size, 0);
-  ts_install (vm, "get-key",         ts_run_int_0, (int) getch);
+  ts_install (vm, "get-key",         ts_run_int_0, (tsint) getch);
 }
 
 int

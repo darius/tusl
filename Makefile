@@ -1,5 +1,10 @@
-CFLAGS := -Wall -g2 -O2 -m32 -fno-strict-aliasing
-LDFLAGS := -m32
+# N.B. to compile for 32-bit systems:
+#  besides setting archflag as below, you need to edit tusl.h
+#archflag := -m32
+archflag :=
+
+CFLAGS := -Wall -g2 -O2 $(archflag) -fno-strict-aliasing
+LDFLAGS := $(archflag)
 
 all: runtusl libtusl.a runansi
 

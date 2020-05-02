@@ -82,4 +82,6 @@
 :paragraph      intro  4 'phrase s  $. emit newline newline ;
 :paper          newline  4 'paragraph s ;
 
+\(start-tracing
+\(0 intros spew)
 (paper)
