@@ -21,7 +21,7 @@
 :notify {str}   messages width bl fill
                 messages  str  str strlen  memcpy ;
 
-:.digit {b d}   b  2 d - 4* u>>  hex-digit  messages d + c! ;
+:.digit {b d}   b  2 d - 4 * u>>  hex-digit  messages d + c! ;
 :.notify {b}    "" notify  b 0 .digit  b 1 .digit  b 2 .digit ;
 
 :page-size      (width height * constant)
