@@ -303,8 +303,7 @@ read_from_file (ts_VM *vm)
 {
   ts_Stream *input = &vm->input;
   FILE *fp = (FILE *) input->data;
-  /* FIXME
-: handle null bytes */
+  /* FIXME: handle null bytes */
   if (NULL != fgets (input->buffer, sizeof input->buffer, fp))
     return strlen (input->buffer); 
   if (ferror (fp))

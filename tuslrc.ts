@@ -71,8 +71,8 @@
 :memmove {dest src n}   dest src n  src dest src n + within (if) memcpy-up ;
                                                           (then) memcpy ;
 
+:erase                  0 \ fall through
 :fill {str n c}         n (when)  c str c!  str 1+ n 1- c fill ;
-:erase                  0 fill ;
 
 
 :string-c-index {a i c} a i + c@ c = (if)  i ;  (then)
