@@ -104,21 +104,38 @@
                   level at  c get-displacement negate  c unmove ;
 
 
+\ Since the runansi.c screen-blast doesn't interpret newlines.
+\ Else we'd just do:
+\ :string-blast   dup strlen screen-blast ;
+
+:string-line	0
+:string-line-loop \ a u -- a u'
+		{a u} a u  a u + c@ {a u c}
+                c 0=   (if)  a u ;  (then)
+                c 10 = (if)  a u ;  (then)
+                a u 1+ string-line-loop ;
+:?skip-newline {a} a c@ 10 = (if)  a 1+ ;  (then)  a ;
+:string-blast	\ x y a --
+		{a} a c@ 0= (if)  drop drop ;  (then)
+		a string-line {x y a u}
+                x y a u screen-blast
+                0  y 1+  a u + ?skip-newline  string-blast ;
+
+
 \ The UI
 
 :solved?        0 $o string-c-index -1 = ;
 
 :at-xy          level at level -  width /mod ;
-:string-blast   dup strlen screen-blast ;
 :banner         level solved? (if)  "yay" ;  (then)  "   " ;
 :update         0 0 banner string-blast
                 0 2 level string-blast
                 at-xy 2+ screen-refresh ;
 
-:react {key}    key 0x104 = (if)  $l push-it ;  (then)
-                key 0x105 = (if)  $r push-it ;  (then)
-                key 0x103 = (if)  $u push-it ;  (then)
-                key 0x102 = (if)  $d push-it ;  (then)
+:react {key}    key 0x444 = (if)  $l push-it ;  (then)
+                key 0x443 = (if)  $r push-it ;  (then)
+                key 0x441 = (if)  $u push-it ;  (then)
+                key 0x442 = (if)  $d push-it ;  (then)
                 key $u    = (if)        undo ;  (then)
                 ;
 :playing        update
